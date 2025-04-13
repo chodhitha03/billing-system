@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mall Billing System with Existing Customers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 30px;
+    }
+    .container {
+      max-width: 700px;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      margin: auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 12px;
+      margin: 8px 0;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .product {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .product input {
+      flex: 1;
+    }
+    #bill {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 5px;
+      margin-top: 20px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      border: 1px dashed #ccc;
+    }
+    .btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .btn:hover {
+      background: #218838;
+    }
+    #walletInfo {
+      font-weight: bold;
+      color: #333;
+      margin: 5px 0;
+    }
+    hr {
+      margin: 20px 0;
+    }
+    #billingSection {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Mall Billing System</h2>
+
+    <input type="text" id="customerName" placeholder="Enter Customer Name">
+    <button class="btn" onclick="continueCustomer()">Continue</button>
+    <div id="walletInfo"></div>
+
+    <div id="billingSection">
+      <hr>
+      <div id="productList"></div>
+      <button class="btn" onclick="addProduct()">+ Add Product</button>
+
+      <input type="number" id="redeem" placeholder="Enter coins to redeem (if any)">
+      <button class="btn" onclick="generateBill()">Generate Bill</button>
+
+      <div id="bill"></div>
+    </div>
+  </div>
+
+  <script>
+    const users = ["chodhitha", "charvika", "mahesh", "shivani"];
+    let customers = {
+      "chodhitha": 200,
+      "charvika": 200,
+      "mahesh": 200,
+      "shivani": 200
+    };
+    let currentCustomer = null;
+
+    function continueCustomer() {
+      const name = document.getElementById("customerName").value.trim().toLowerCase();
+      if (!name) {
+        alert("Please enter a customer name.");
+        return;
+      }
+
+      if (!customers[name]) {
+        customers[name] = 50;
+        alert(${name}, welcome! You've received 50 bonus coins in your wallet.);
+      } else {
+        alert(Welcome back, ${name}!);
+      }
+
+      currentCustomer = name;
+      document.getElementById("billingSection").style.display = "block";
+      updateWalletInfo();
+    }
+
+    function updateWalletInfo() {
+      document.getElementById("walletInfo").textContent = Available Coins: ${customers[currentCustomer]};
+    }
+
+    function addProduct() {
+      const container = document.createElement("div");
+      container.className = "product";
+      container.innerHTML = `
+        <input type="text" placeholder="Product Name" class="pname">
+        <input type="number" placeholder="Price (₹)" class="pprice">
+        <input type="number" placeholder="Discount (%)" class="pdiscount">
+      `;
+      document.getElementById("productList").appendChild(container);
+    }
+
+    function generateBill() {
+      if (!currentCustomer) {
+        alert("Enter customer name first!");
+        return;
+      }
+
+      const names = document.querySelectorAll(".pname");
+      const prices = document.querySelectorAll(".pprice");
+      const discounts = document.querySelectorAll(".pdiscount");
+
+      if (names.length === 0) {
+        alert("Add at least one product!");
+        return;
+      }
+
+      let subtotal = 0;
+      let billContent = `        Mall Receipt\n-----------------------------\nCustomer: ${currentCustomer}\nDate: ${new Date().toLocaleString()}\n-----------------------------\n`;
+
+      for (let i = 0; i < names.length; i++) {
+        const productName = names[i].value;
+        const price = parseFloat(prices[i].value);
+        const discount = parseFloat(discounts[i].value);
+
+        if (!productName || isNaN(price) || isNaN(discount)) continue;
+
+        const finalPrice = price - (price * discount / 100);
+        subtotal += finalPrice;
+
+        billContent += ${i+1}. ${productName}\n   ₹${price} - ${discount}% = ₹${finalPrice.toFixed(2)}\n;
+      }
+
+      const gst = subtotal * 0.10;
+      let total = subtotal + gst;
+
+      const redeem = parseInt(document.getElementById("redeem").value) || 0;
+
+      if (redeem > customers[currentCustomer]) {
+        alert(Max redeemable coins: ${customers[currentCustomer]});
+        return;
+      }
+
+      total -= redeem;
+      customers[currentCustomer] -= redeem;
+
+      const earnedCoins = Math.round(total * 0.05);
+      customers[currentCustomer] += earnedCoins;
+
+      billContent += -----------------------------\nSubtotal: ₹${subtotal.toFixed(2)}\nGST (10%): ₹${gst.toFixed(2)}\nRedeemed: ₹${redeem}\n-----------------------------\nTotal: ₹${total.toFixed(2)}\nEarned Coins: +${earnedCoins}\nCoins Left: ${customers[currentCustomer]}\n-----------------------------\n   Thank you for shopping!\n;
+
+      document.getElementById("bill").textContent = billContent;
+      updateWalletInfo();
+    }
+
+    addProduct();
+  </script>
+</body>
+</html>
